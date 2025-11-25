@@ -34,8 +34,14 @@ func main() {
 	userRepo := repository.NewUserRepository()
 	userService := service.NewUserService(userRepo)
 
+	studentRepo := repository.NewStudentRepository()
+	studentService := service.NewStudentService(studentRepo)
+
+	lecturerRepo := repository.NewLecturerRepository()
+	lecturerService := service.NewLecturerService(lecturerRepo)
+
 	// 4. Setup routes (with dependency injection)
-	routes.SetupRoutes(app, authService, userService)
+	routes.SetupRoutes(app, authService, userService, studentService, lecturerService)
 
 	// 5. Start server
 	port := ":" + config.AppEnv.AppPort

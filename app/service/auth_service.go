@@ -21,9 +21,9 @@ func NewAuthService(repo *repository.AuthRepository) *AuthService {
 	return &AuthService{repo}
 }
 
-// =============================
-//      LOGIN
-// =============================
+/* =============================
+   LOGIN (WITH REFRESH TOKEN)
+============================= */
 func (s *AuthService) Login(c *fiber.Ctx) error {
 	var req model.LoginRequest
 
@@ -40,6 +40,9 @@ func (s *AuthService) Login(c *fiber.Ctx) error {
 		return c.Status(401).JSON(fiber.Map{"error": "username atau password salah"})
 	}
 
+	perms, _ := s.repo.GetPermissionsByRole(context.Background(), user.RoleID)
+
+	// ACCESS TOKEN
 	claims := jwt.MapClaims{
 		"user_id":   user.ID,
 		"role_id":   user.RoleID,
@@ -47,28 +50,39 @@ func (s *AuthService) Login(c *fiber.Ctx) error {
 		"full_name": user.FullName,
 		"exp":       time.Now().Add(24 * time.Hour).Unix(),
 	}
+	access := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	accessToken, _ := access.SignedString([]byte(os.Getenv("API_KEY")))
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	signed, _ := token.SignedString([]byte(os.Getenv("API_KEY")))
+	// REFRESH TOKEN
+	refreshClaims := jwt.MapClaims{
+		"user_id": user.ID,
+		"exp":     time.Now().Add(7 * 24 * time.Hour).Unix(),
+	}
+	refreshJWT := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims)
+	refreshToken, _ := refreshJWT.SignedString([]byte(os.Getenv("API_KEY")))
+
+	// SAVE REFRESH TOKEN → DB
+	s.repo.SaveRefreshToken(context.Background(), user.ID, refreshToken, time.Now().Add(7*24*time.Hour))
 
 	return c.JSON(fiber.Map{
+		"status": "success",
 		"data": fiber.Map{
-			"token": signed,
+			"token":        accessToken,
+			"refreshToken": refreshToken,
 			"user": fiber.Map{
-				"id":        user.ID,
-				"username":  user.Username,
-				"email":     user.Email,
-				"full_name": user.FullName,
-				"role_id":   user.RoleID,
-				"role_name": user.RoleName,
+				"id":          user.ID,
+				"username":    user.Username,
+				"fullName":    user.FullName,
+				"role":        user.RoleName,
+				"permissions": perms,
 			},
 		},
 	})
 }
 
-// =============================
-//      PROFILE
-// =============================
+/* =============================
+   PROFILE
+============================= */
 func (s *AuthService) Profile(c *fiber.Ctx) error {
 	claims := c.Locals("user").(jwt.MapClaims)
 
@@ -83,33 +97,59 @@ func (s *AuthService) Profile(c *fiber.Ctx) error {
 	})
 }
 
-// =============================
-//      LOGOUT
-// =============================
+/* =============================
+   LOGOUT (REVOKE REFRESH TOKEN)
+============================= */
 func (s *AuthService) Logout(c *fiber.Ctx) error {
+	refreshToken := c.Get("X-Refresh-Token")
+	if refreshToken == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "Refresh token tidak ditemukan"})
+	}
+
+	s.repo.DeleteRefreshToken(context.Background(), refreshToken)
+
 	return c.JSON(fiber.Map{
-		"message": "Logout berhasil",
+		"status":  "success",
+		"message": "Logout berhasil. Token dicabut.",
 	})
 }
 
-// =============================
-//      REFRESH TOKEN
-// =============================
+/* =============================
+   REFRESH TOKEN
+============================= */
 func (s *AuthService) Refresh(c *fiber.Ctx) error {
-	oldClaims := c.Locals("user").(jwt.MapClaims)
+	refreshToken := c.Get("X-Refresh-Token")
+	if refreshToken == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "Refresh token tidak ditemukan"})
+	}
+
+	valid, _ := s.repo.IsRefreshTokenValid(context.Background(), refreshToken)
+	if !valid {
+		return c.Status(401).JSON(fiber.Map{"error": "Refresh token sudah dicabut"})
+	}
+
+	// Parse refresh token
+	token, err := jwt.Parse(refreshToken, func(t *jwt.Token) (interface{}, error) {
+		return []byte(os.Getenv("API_KEY")), nil
+	})
+	if err != nil || !token.Valid {
+		return c.Status(401).JSON(fiber.Map{"error": "Refresh token invalid"})
+	}
+
+	claims := token.Claims.(jwt.MapClaims)
 
 	newClaims := jwt.MapClaims{
-		"user_id":   oldClaims["user_id"],
-		"role_id":   oldClaims["role_id"],
-		"role_name": oldClaims["role_name"],
-		"full_name": oldClaims["full_name"],
+		"user_id":   claims["user_id"],
 		"exp":       time.Now().Add(24 * time.Hour).Unix(),
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, newClaims)
-	signed, _ := token.SignedString([]byte(os.Getenv("API_KEY")))
+	newToken := jwt.NewWithClaims(jwt.SigningMethodHS256, newClaims)
+	signed, _ := newToken.SignedString([]byte(os.Getenv("API_KEY")))
 
 	return c.JSON(fiber.Map{
-		"token": signed,
+		"status": "success",
+		"data": fiber.Map{
+			"token": signed,
+		},
 	})
 }

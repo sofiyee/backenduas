@@ -2,11 +2,13 @@ package service
 
 import (
 	"context"
+
 	"backenduas/app/model"
 	"backenduas/app/repository"
 
 	"github.com/gofiber/fiber/v2"
 	"golang.org/x/crypto/bcrypt"
+	"github.com/google/uuid"
 )
 
 type UserService struct {
@@ -17,6 +19,9 @@ func NewUserService(repo *repository.UserRepository) *UserService {
 	return &UserService{repo}
 }
 
+// ===============================
+// GET ALL
+// ===============================
 func (s *UserService) GetAll(c *fiber.Ctx) error {
 	users, err := s.repo.GetAll(context.Background())
 	if err != nil {
@@ -25,6 +30,9 @@ func (s *UserService) GetAll(c *fiber.Ctx) error {
 	return c.JSON(users)
 }
 
+// ===============================
+// GET BY ID
+// ===============================
 func (s *UserService) GetByID(c *fiber.Ctx) error {
 	id := c.Params("id")
 	user, err := s.repo.GetByID(context.Background(), id)
@@ -34,27 +42,38 @@ func (s *UserService) GetByID(c *fiber.Ctx) error {
 	return c.JSON(user)
 }
 
+// ===============================
+// CREATE USER + AUTO INSERT
+// ===============================
 func (s *UserService) Create(c *fiber.Ctx) error {
 	var req model.User
 
+	// Parse body
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": "invalid body"})
 	}
 
-	// Wajib hash dari password input
+	// Generate UUID untuk user
+	req.ID = uuid.NewString()
+
+	// Hash password
 	hash, _ := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	req.PasswordHash = string(hash)
 
+	// Insert user + auto insert ke students/lecturers
 	if err := s.repo.Create(context.Background(), &req); err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	return c.JSON(fiber.Map{"message": "User berhasil dibuat"})
+	return c.Status(201).JSON(fiber.Map{"message": "User berhasil dibuat"})
 }
 
-
+// ===============================
+// UPDATE USER
+// ===============================
 func (s *UserService) Update(c *fiber.Ctx) error {
 	var req model.User
+
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": "invalid body"})
 	}
@@ -68,6 +87,9 @@ func (s *UserService) Update(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"message": "User berhasil diperbarui"})
 }
 
+// ===============================
+// DELETE USER
+// ===============================
 func (s *UserService) Delete(c *fiber.Ctx) error {
 	id := c.Params("id")
 
@@ -78,6 +100,9 @@ func (s *UserService) Delete(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"message": "User berhasil dihapus"})
 }
 
+// ===============================
+// UPDATE ROLE
+// ===============================
 func (s *UserService) UpdateRole(c *fiber.Ctx) error {
 	userID := c.Params("id")
 
