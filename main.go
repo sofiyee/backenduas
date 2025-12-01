@@ -18,30 +18,42 @@ func main() {
 	// 1. Load ENV
 	config.LoadEnv()
 
-	// 2. Connect to PostgreSQL
-	database.ConnectPostgre()
+	// 2. Connect PostgreSQL + MongoDB
+	database.ConnectDatabases()
 
 	// 3. Setup Fiber
 	app := fiber.New()
-
 	app.Use(cors.New())
 	app.Use(logger.New())
 
-	// === Init repository & services ===
+	// === Init repository ===
 	authRepo := repository.NewAuthRepository()
-	authService := service.NewAuthService(authRepo)
-
 	userRepo := repository.NewUserRepository()
-	userService := service.NewUserService(userRepo)
-
 	studentRepo := repository.NewStudentRepository()
-	studentService := service.NewStudentService(studentRepo)
-
 	lecturerRepo := repository.NewLecturerRepository()
+
+	// Achievement repo
+	pgAchRepo := repository.NewAchievementPGRepository()
+	mongoAchRepo := repository.NewAchievementMongoRepository()
+
+	// === Init services ===
+	authService := service.NewAuthService(authRepo)
+	userService := service.NewUserService(userRepo)
+	studentService := service.NewStudentService(studentRepo)
 	lecturerService := service.NewLecturerService(lecturerRepo)
 
-	// 4. Setup routes (with dependency injection)
-	routes.SetupRoutes(app, authService, userService, studentService, lecturerService)
+	// Achievement service membutuhkan 3 repo: PG, Mongo, Student
+	achievementService := service.NewAchievementService(pgAchRepo, mongoAchRepo, studentRepo)
+
+	// 4. Setup routes
+	routes.SetupRoutes(
+		app,
+		authService,
+		userService,
+		studentService,
+		lecturerService,
+		achievementService,
+	)
 
 	// 5. Start server
 	port := ":" + config.AppEnv.AppPort

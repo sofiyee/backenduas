@@ -67,7 +67,7 @@ func (r *StudentRepository) GetAll(ctx context.Context) ([]model.StudentDetail, 
 }
 
 // ===============================
-// GET BY ID
+// GET STUDENT BY ID
 // ===============================
 func (r *StudentRepository) GetByID(ctx context.Context, id string) (*model.StudentDetail, error) {
 	row := database.DB.QueryRow(ctx, `
@@ -137,4 +137,72 @@ func (r *StudentRepository) UpdateAdvisor(ctx context.Context, studentID string,
 	`, advisorID, studentID)
 
 	return err
+}
+
+// ===============================
+// GET STUDENT ID BY USER ID (Mahasiswa Login)
+// ===============================
+func (r *StudentRepository) GetStudentIDByUserID(ctx context.Context, userID string) (string, error) {
+	row := database.DB.QueryRow(ctx, `
+        SELECT id 
+        FROM students
+        WHERE user_id = $1
+    `, userID)
+
+	var studentID string
+	err := row.Scan(&studentID)
+	return studentID, err
+}
+
+// ===============================
+// GET LECTURER ID BY USER ID (Dosen Login)
+// ===============================
+func (r *StudentRepository) GetLecturerIDByUserID(ctx context.Context, userID string) (string, error) {
+	row := database.DB.QueryRow(ctx, `
+        SELECT id 
+        FROM lecturers
+        WHERE user_id = $1
+    `, userID)
+
+	var lecturerID string
+	err := row.Scan(&lecturerID)
+	return lecturerID, err
+}
+
+// ===============================
+// GET STUDENTS BY ADVISOR (Mahasiswa Bimbingan Dosen)
+// ===============================
+func (r *StudentRepository) GetStudentsByAdvisor(ctx context.Context, advisorID string) ([]string, error) {
+	rows, err := database.DB.Query(ctx, `
+        SELECT id
+        FROM students
+        WHERE advisor_id = $1
+    `, advisorID)
+
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	studentIDs := []string{}
+
+	for rows.Next() {
+		var id string
+		rows.Scan(&id)
+		studentIDs = append(studentIDs, id)
+	}
+
+	return studentIDs, nil
+}
+
+func (r *StudentRepository) IsStudentUnderAdvisor(ctx context.Context, studentID string, advisorID string) (bool, error) {
+    row := database.DB.QueryRow(ctx, `
+        SELECT COUNT(*) 
+        FROM students 
+        WHERE id = $1 AND advisor_id = $2
+    `, studentID, advisorID)
+
+    var count int
+    err := row.Scan(&count)
+    return count > 0, err
 }

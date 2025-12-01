@@ -11,6 +11,8 @@ type Env struct {
 	AppPort string
 	DBDsn   string
 	ApiKey  string
+	MongoURI string `mapstructure:"MONGO_URI"`
+    MongoDB  string `mapstructure:"MONGO_DB"`
 }
 
 var AppEnv *Env
@@ -25,5 +27,9 @@ func LoadEnv() {
 		AppPort: os.Getenv("APP_PORT"),
 		DBDsn:   os.Getenv("DB_DSN"),
 		ApiKey:  os.Getenv("API_KEY"),
+		MongoURI: os.Getenv("MONGO_URI"),
+		MongoDB:  os.Getenv("MONGO_DB"),
+
+
 	}
 }
