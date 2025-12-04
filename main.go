@@ -39,13 +39,14 @@ func main() {
 	// === Init services ===
 	authService := service.NewAuthService(authRepo)
 	userService := service.NewUserService(userRepo)
-	studentService := service.NewStudentService(studentRepo)
+	studentService := service.NewStudentService(studentRepo, pgAchRepo, mongoAchRepo)
 	lecturerService := service.NewLecturerService(lecturerRepo)
-
-	// Achievement service membutuhkan 3 repo: PG, Mongo, Student
 	achievementService := service.NewAchievementService(pgAchRepo, mongoAchRepo, studentRepo)
 
-	// 4. Setup routes
+	// === NEW: Report Service (pakai 3 repo achievement + student) ===
+	reportService := service.NewReportService(pgAchRepo, mongoAchRepo, studentRepo)
+
+	// 4. Setup routes (tambahkan reportService)
 	routes.SetupRoutes(
 		app,
 		authService,
@@ -53,6 +54,7 @@ func main() {
 		studentService,
 		lecturerService,
 		achievementService,
+		reportService, // ← baru ditambahkan
 	)
 
 	// 5. Start server

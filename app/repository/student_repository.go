@@ -206,3 +206,58 @@ func (r *StudentRepository) IsStudentUnderAdvisor(ctx context.Context, studentID
     err := row.Scan(&count)
     return count > 0, err
 }
+
+// ===============================
+// Report
+func (r *StudentRepository) GetAllStudentIDs(ctx context.Context) ([]string, error) {
+    rows, err := database.DB.Query(ctx, `
+        SELECT id FROM students
+    `)
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
+
+    result := []string{}
+    for rows.Next() {
+        var id string
+        rows.Scan(&id)
+        result = append(result, id)
+    }
+    return result, nil
+}
+
+// ===============================
+// GET MULTIPLE STUDENT DETAILS BY IDS (FOR REPORT)
+// ===============================
+func (r *StudentRepository) GetStudentsByIDs(ctx context.Context, ids []string) (map[string]model.StudentDetail, error) {
+
+    rows, err := database.DB.Query(ctx, `
+        SELECT 
+            s.id,
+            u.full_name,
+            s.program_study,
+            s.academic_year
+        FROM students s
+        JOIN users u ON u.id = s.user_id
+        WHERE s.id = ANY($1)
+    `, ids)
+
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
+
+    result := make(map[string]model.StudentDetail)
+
+    for rows.Next() {
+        var s model.StudentDetail
+        err := rows.Scan(&s.ID, &s.FullName, &s.ProgramStudy, &s.AcademicYear)
+        if err != nil {
+            continue
+        }
+        result[s.ID] = s
+    }
+
+    return result, nil
+}

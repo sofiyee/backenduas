@@ -19,6 +19,8 @@ func StudentRoutes(api fiber.Router, studentService *service.StudentService) {
 	// Admin + Dosen Wali (lihat detail mahasiswa)
 	students.Get("/:id", middleware.AllowRoles("Admin", "Dosen Wali"), studentService.GetByID)
 
-	// Nanti tambahkan:
-	// students.Get("/:id/achievements", ...)
+	students.Get("/:id/achievements",
+    middleware.AllowRoles("Mahasiswa", "Dosen Wali", "Admin"),
+    studentService.GetAchievements)
+
 }

@@ -8,31 +8,36 @@ import (
 )
 
 func SetupRoutes(
-	app *fiber.App,
-	authService *service.AuthService,
-	userService *service.UserService,
-	studentService *service.StudentService,
-	lecturerService *service.LecturerService,
-	achievementService *service.AchievementService, // ⬅️ TAMBAH INI
+    app *fiber.App,
+    authService *service.AuthService,
+    userService *service.UserService,
+    studentService *service.StudentService,
+    lecturerService *service.LecturerService,
+    achievementService *service.AchievementService,
+    reportService *service.ReportService, 
 ) {
-	fmt.Println("🔥 REGISTERING ROUTES...")
+    fmt.Println("🔥 REGISTERING ROUTES...")
 
-	api := app.Group("/api/v1")
+    api := app.Group("/api/v1")
 
-	// Auth Routes
-	AuthRoutes(api, authService)
+    // Auth Routes
+    AuthRoutes(api, authService)
 
-	// User CRUD Routes
-	UserRoutes(api, userService)
+    // User CRUD Routes
+    UserRoutes(api, userService)
 
-	// Student Routes
-	StudentRoutes(api, studentService)
+    // Student Routes
+    StudentRoutes(api, studentService)
 
-	// Lecturer Routes
-	LecturerRoutes(api, lecturerService)
+    // Lecturer Routes
+    LecturerRoutes(api, lecturerService)
 
-	// Achievement Routes (NEW)
-	AchievementRoutes(api, achievementService) 
+    // Achievement Routes
+    AchievementRoutes(api, achievementService)
 
-	fmt.Println("🔥 ROUTES REGISTERED")
+    // Reports Routes (NEW)
+    ReportRoutes(api, reportService)
+
+    fmt.Println("🔥 ROUTES REGISTERED")
 }
+
