@@ -17,7 +17,9 @@ type AchievementMongoRepository struct{}
 func NewAchievementMongoRepository() *AchievementMongoRepository {
 	return &AchievementMongoRepository{}
 }
-
+func (r *AchievementMongoRepository) Collection() *mongo.Collection {
+    return r.collection()
+}
 func (r *AchievementMongoRepository) collection() *mongo.Collection {
 	return database.MongoDB.Collection("achievements")
 }
@@ -85,4 +87,46 @@ func (r *AchievementMongoRepository) FindManyByIDs(ctx context.Context, ids []pr
 	}
 
 	return result, nil
+}
+
+func (r *AchievementMongoRepository) AddAttachment(ctx context.Context, id primitive.ObjectID, file model.AttachmentFile) error {
+
+    update := bson.M{
+        "$set": bson.M{
+            "updatedAt": time.Now().Unix(),
+        },
+        "$push": bson.M{
+            "attachments": file,
+        },
+    }
+
+    // Pastikan attachments selalu berupa array
+    _, err := r.collection().UpdateOne(
+        ctx,
+        bson.M{
+            "_id": id,
+            "$or": []bson.M{
+                {"attachments": bson.M{"$exists": false}},
+                {"attachments": nil},
+            },
+        },
+        bson.M{
+            "$set": bson.M{
+                "attachments": []model.AttachmentFile{},
+            },
+        },
+    )
+
+    if err != nil {
+        return err
+    }
+
+    // Setelah array terjamin, lakukan $push
+    _, err = r.collection().UpdateOne(
+        ctx,
+        bson.M{"_id": id},
+        update,
+    )
+
+    return err
 }
