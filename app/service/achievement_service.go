@@ -35,6 +35,19 @@ func NewAchievementService(
 //	FR-003 — CREATE PRESTASI (Mahasiswa)
 //
 // =====================================================
+// CreateAchievement godoc
+// @Summary Create new achievement
+// @Description Create achievement (Mahasiswa only)
+// @Tags Achievements
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param body body model.AchievementCreateRequest true "Achievement payload"
+// @Success 201 {object} map[string]interface{}
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /achievements [post]
 func (s *AchievementService) Create(c *fiber.Ctx) error {
 
 	claims := c.Locals("user").(jwt.MapClaims)
@@ -94,6 +107,17 @@ func (s *AchievementService) Create(c *fiber.Ctx) error {
 //	FR-004 — SUBMIT PRESTASI
 //
 // =====================================================
+// SubmitAchievement godoc
+// @Summary Submit achievement
+// @Description Submit achievement (change status to submitted)
+// @Tags Achievements
+// @Security BearerAuth
+// @Produce json
+// @Param id path string true "Achievement ID"
+// @Success 200 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /achievements/{id}/submit [put]
 func (s *AchievementService) Submit(c *fiber.Ctx) error {
 	id := c.Params("id")
 	ctx := context.Background()
@@ -118,6 +142,18 @@ func (s *AchievementService) Submit(c *fiber.Ctx) error {
 //	FR-005 — DELETE PRESTASI DRAFT
 //
 // =====================================================
+// DeleteAchievement godoc
+// @Summary Delete draft achievement
+// @Description Delete achievement (draft only)
+// @Tags Achievements
+// @Security BearerAuth
+// @Produce json
+// @Param id path string true "Achievement ID"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /achievements/{id} [delete]
 func (s *AchievementService) Delete(c *fiber.Ctx) error {
 	id := c.Params("id")
 	ctx := context.Background()
@@ -152,6 +188,16 @@ func (s *AchievementService) Delete(c *fiber.Ctx) error {
 //	FR-006 + FR-010 — LIST PRESTASI (Role-based List)
 //
 // =====================================================
+// GetAchievements godoc
+// @Summary Get achievements list
+// @Description Get achievements based on role (Mahasiswa, Dosen Wali, Admin)
+// @Tags Achievements
+// @Security BearerAuth
+// @Produce json
+// @Success 200 {array} map[string]interface{}
+// @Failure 403 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /achievements [get]
 func (s *AchievementService) GetAll(c *fiber.Ctx) error {
 
 	claims := c.Locals("user").(jwt.MapClaims)
@@ -282,6 +328,18 @@ func (s *AchievementService) GetAll(c *fiber.Ctx) error {
 //	FR-007 — VERIFY PRESTASI (Dosen Wali)
 //
 // =====================================================
+// VerifyAchievement godoc
+// @Summary Verify achievement
+// @Description Verify submitted achievement (Dosen Wali)
+// @Tags Achievements
+// @Security BearerAuth
+// @Produce json
+// @Param id path string true "Achievement ID"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]string
+// @Failure 403 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Router /achievements/{id}/verify [put]
 func (s *AchievementService) Verify(c *fiber.Ctx) error {
 	id := c.Params("id")
 	ctx := context.Background()
@@ -340,6 +398,20 @@ func (s *AchievementService) Verify(c *fiber.Ctx) error {
 //	FR-008 — REJECT PRESTASI (Dosen Wali)
 //
 // =====================================================
+// RejectAchievement godoc
+// @Summary Reject achievement
+// @Description Reject submitted achievement (Dosen Wali)
+// @Tags Achievements
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param id path string true "Achievement ID"
+// @Param body body map[string]string true "Rejection note"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]string
+// @Failure 403 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Router /achievements/{id}/reject [put]
 func (s *AchievementService) Reject(c *fiber.Ctx) error {
 
 	id := c.Params("id")
@@ -433,6 +505,17 @@ func (s *AchievementService) createNotificationDummy(studentID string, msg strin
 //	FR-??? — DETAIL PRESTASI (Admin / Dosen Wali / Mahasiswa)
 //
 // =====================================================
+// GetAchievementByID godoc
+// @Summary Get achievement detail
+// @Description Get achievement detail by ID
+// @Tags Achievements
+// @Security BearerAuth
+// @Produce json
+// @Param id path string true "Achievement ID"
+// @Success 200 {object} map[string]interface{}
+// @Failure 403 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Router /achievements/{id} [get]
 func (s *AchievementService) GetByID(c *fiber.Ctx) error {
 
 	id := c.Params("id")
@@ -517,7 +600,23 @@ func (s *AchievementService) GetByID(c *fiber.Ctx) error {
 		"detail":         mongoData,
 	})
 }
-
+// =====================================================
+//   FR-009 — UPDATE PRESTASI DRAFT (Mahasiswa)
+// =====================================================
+// UpdateAchievement godoc
+// @Summary Update achievement
+// @Description Update draft achievement (Mahasiswa only)
+// @Tags Achievements
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param id path string true "Achievement ID"
+// @Param body body model.AchievementUpdateInput true "Update payload"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 403 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Router /achievements/{id} [put]
 func (s *AchievementService) Update(c *fiber.Ctx) error {
 	ctx := context.Background()
 	id := c.Params("id")
@@ -572,6 +671,23 @@ func (s *AchievementService) Update(c *fiber.Ctx) error {
 
 	return c.JSON(fiber.Map{"message": "achievement updated"})
 }
+// =====================================================
+//  FR-011 — UPLOAD LAMPIRAN PRESTASI (Mahasiswa)
+// =====================================================
+// UploadAchievementAttachment godoc
+// @Summary Upload achievement attachment
+// @Description Upload attachment to draft achievement
+// @Tags Achievements
+// @Security BearerAuth
+// @Accept multipart/form-data
+// @Produce json
+// @Param id path string true "Achievement ID"
+// @Param file formData file true "Attachment file"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]string
+// @Failure 403 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /achievements/{id}/attachments [post]
 
 func (s *AchievementService) UploadAttachment(c *fiber.Ctx) error {
     ctx := context.Background()
@@ -633,6 +749,21 @@ func (s *AchievementService) UploadAttachment(c *fiber.Ctx) error {
         "file_url":  attachment.FileURL,
     })
 }
+
+// =====================================================
+// FR-012 — RIWAYAT PERUBAHAN PRESTASI (Admin / Dosen Wali / Mahasiswa)
+// =====================================================
+// GetAchievementHistory godoc
+// @Summary Get achievement history
+// @Description Get status history of achievement
+// @Tags Achievements
+// @Security BearerAuth
+// @Produce json
+// @Param id path string true "Achievement ID"
+// @Success 200 {object} map[string]interface{}
+// @Failure 403 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Router /achievements/{id}/history [get]
 
 func (s *AchievementService) History(c *fiber.Ctx) error {
     ctx := context.Background()

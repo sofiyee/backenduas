@@ -32,6 +32,17 @@ func NewReportService(pg *repository.AchievementPGRepository,
 // ======================================================
 //  GLOBAL STATISTICS
 // ======================================================
+// GlobalStatistics godoc
+// @Summary Global achievement statistics
+// @Description Menampilkan statistik prestasi global berdasarkan role (Admin, Dosen Wali, Mahasiswa)
+// @Tags Report
+// @Security BearerAuth
+// @Produce json
+// @Success 200 {object} model.StudentAchievementStat
+// @Failure 403 {object} map[string]any
+// @Failure 404 {object} map[string]any
+// @Failure 500 {object} map[string]any
+// @Router /reports/statistics [get]
 func (s *ReportService) GlobalStatistics(c *fiber.Ctx) error {
     ctx := context.Background()
 
@@ -130,6 +141,18 @@ func (s *ReportService) GlobalStatistics(c *fiber.Ctx) error {
 // ======================================================
 //  STUDENT STATISTICS
 // ======================================================
+// StudentStatistics godoc
+// @Summary Student achievement statistics
+// @Description Menampilkan statistik prestasi seorang mahasiswa berdasarkan role akses
+// @Tags Report
+// @Security BearerAuth
+// @Produce json
+// @Param id path string true "Student ID"
+// @Success 200 {object} model.StudentAchievementStat
+// @Failure 403 {object} map[string]any
+// @Failure 404 {object} map[string]any
+// @Failure 500 {object} map[string]any
+// @Router /reports/student/{id} [get]
 func (s *ReportService) StudentStatistics(c *fiber.Ctx) error {
     ctx := context.Background()
 

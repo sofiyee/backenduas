@@ -24,6 +24,17 @@ func NewAuthService(repo *repository.AuthRepository) *AuthService {
 /* =============================
    LOGIN (WITH REFRESH TOKEN)
 ============================= */
+// Login godoc
+// @Summary Login user
+// @Description Login user dan mengembalikan access token & refresh token
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param body body model.LoginRequest true "Login credentials"
+// @Success 200 {object} map[string]any
+// @Failure 400 {object} map[string]any
+// @Failure 401 {object} map[string]any
+// @Router /auth/login [post]
 func (s *AuthService) Login(c *fiber.Ctx) error {
 	var req model.LoginRequest
 
@@ -83,6 +94,16 @@ func (s *AuthService) Login(c *fiber.Ctx) error {
 /* =============================
    PROFILE
 ============================= */
+// Profile godoc
+// @Summary Get user profile
+// @Description Get profile of currently logged-in user
+// @Tags Auth
+// @Security BearerAuth
+// @Produce json
+// @Success 200 {object} map[string]any
+// @Failure 401 {object} map[string]any
+// @Failure 404 {object} map[string]any
+// @Router /auth/profile [get]
 func (s *AuthService) Profile(c *fiber.Ctx) error {
 	claims := c.Locals("user").(jwt.MapClaims)
 
@@ -100,6 +121,16 @@ func (s *AuthService) Profile(c *fiber.Ctx) error {
 /* =============================
    LOGOUT (REVOKE REFRESH TOKEN)
 ============================= */
+// Logout godoc
+// @Summary Logout user
+// @Description Logout user dan mencabut refresh token
+// @Tags Auth
+// @Security BearerAuth
+// @Produce json
+// @Param X-Refresh-Token header string true "Refresh Token"
+// @Success 200 {object} map[string]any
+// @Failure 400 {object} map[string]any
+// @Router /auth/logout [post]
 func (s *AuthService) Logout(c *fiber.Ctx) error {
 	refreshToken := c.Get("X-Refresh-Token")
 	if refreshToken == "" {
@@ -117,6 +148,16 @@ func (s *AuthService) Logout(c *fiber.Ctx) error {
 /* =============================
    REFRESH TOKEN
 ============================= */
+// RefreshToken godoc
+// @Summary Refresh access token
+// @Description Generate access token baru menggunakan refresh token
+// @Tags Auth
+// @Produce json
+// @Param X-Refresh-Token header string true "Refresh Token"
+// @Success 200 {object} map[string]any
+// @Failure 400 {object} map[string]any
+// @Failure 401 {object} map[string]any
+// @Router /auth/refresh [post]
 func (s *AuthService) Refresh(c *fiber.Ctx) error {
 	refreshToken := c.Get("X-Refresh-Token")
 	if refreshToken == "" {

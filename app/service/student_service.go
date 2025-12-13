@@ -30,6 +30,15 @@ func NewStudentService(
 }
 
 // GET /students
+// GetAll godoc
+// @Summary Get all students
+// @Description Mengambil daftar seluruh mahasiswa
+// @Tags Student
+// @Security BearerAuth
+// @Produce json
+// @Success 200 {object} map[string][]model.StudentDetail
+// @Failure 500 {object} map[string]any
+// @Router /students [get]
 func (s *StudentService) GetAll(c *fiber.Ctx) error {
     data, err := s.repo.GetAll(context.Background())
     if err != nil {
@@ -39,6 +48,17 @@ func (s *StudentService) GetAll(c *fiber.Ctx) error {
 }
 
 // GET /students/:id
+// GetByID godoc
+// @Summary Get student by ID
+// @Description Mengambil detail mahasiswa berdasarkan ID
+// @Tags Student
+// @Security BearerAuth
+// @Produce json
+// @Param id path string true "Student ID"
+// @Success 200 {object} map[string]model.StudentDetail
+// @Failure 404 {object} map[string]any
+// @Failure 500 {object} map[string]any
+// @Router /students/{id} [get]
 func (s *StudentService) GetByID(c *fiber.Ctx) error {
     id := c.Params("id")
     data, err := s.repo.GetByID(context.Background(), id)
@@ -49,6 +69,18 @@ func (s *StudentService) GetByID(c *fiber.Ctx) error {
 }
 
 // POST /students
+// Create godoc
+// @Summary Create new student
+// @Description Membuat data mahasiswa baru
+// @Tags Student
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param request body model.CreateStudentRequest true "Create student payload"
+// @Success 201 {object} map[string]string
+// @Failure 400 {object} map[string]any
+// @Failure 500 {object} map[string]any
+// @Router /students [post]
 func (s *StudentService) Create(c *fiber.Ctx) error {
     var req model.CreateStudentRequest
     if err := c.BodyParser(&req); err != nil {
@@ -74,6 +106,19 @@ func (s *StudentService) Create(c *fiber.Ctx) error {
 }
 
 // PUT /students/:id/advisor
+// UpdateAdvisor godoc
+// @Summary Update student advisor
+// @Description Memperbarui dosen wali mahasiswa
+// @Tags Student
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param id path string true "Student ID"
+// @Param request body object true "Advisor payload"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]any
+// @Failure 500 {object} map[string]any
+// @Router /students/{id}/advisor [put]
 func (s *StudentService) UpdateAdvisor(c *fiber.Ctx) error {
     studentID := c.Params("id")
 
@@ -96,6 +141,18 @@ func (s *StudentService) UpdateAdvisor(c *fiber.Ctx) error {
 // =====================================================
 // GET /students/:id/achievements
 // =====================================================
+// GetAchievements godoc
+// @Summary Get student achievements
+// @Description Mengambil daftar prestasi mahasiswa (role-based access)
+// @Tags Student
+// @Security BearerAuth
+// @Produce json
+// @Param id path string true "Student ID"
+// @Success 200 {array} model.StudentAchievement
+// @Failure 403 {object} map[string]any
+// @Failure 404 {object} map[string]any
+// @Failure 500 {object} map[string]any
+// @Router /students/{id}/achievements [get]
 func (s *StudentService) GetAchievements(c *fiber.Ctx) error {
     ctx := context.Background()
     targetStudentID := c.Params("id")

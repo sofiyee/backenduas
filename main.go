@@ -9,12 +9,34 @@ import (
 	"backenduas/app/repository"
 	"backenduas/app/service"
 
+	_ "backenduas/docs" 
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/gofiber/swagger"
 )
 
+// @title Backend UAS API
+// @version 1.0
+// @description API Sistem Manajemen Prestasi Mahasiswa
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name Sofie Kusuma Anggraini
+// @contact.email sofie@example.com
+
+// @license.name MIT
+// @license.url https://opensource.org/licenses/MIT
+
+// @host localhost:3000
+// @BasePath /api/v1
+
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
 func main() {
+
 	// 1. Load ENV
 	config.LoadEnv()
 
@@ -26,13 +48,15 @@ func main() {
 	app.Use(cors.New())
 	app.Use(logger.New())
 
+	// 🔥 Swagger endpoint
+	app.Get("/swagger/*", swagger.HandlerDefault)
+
 	// === Init repository ===
 	authRepo := repository.NewAuthRepository()
 	userRepo := repository.NewUserRepository()
 	studentRepo := repository.NewStudentRepository()
 	lecturerRepo := repository.NewLecturerRepository()
 
-	// Achievement repo
 	pgAchRepo := repository.NewAchievementPGRepository()
 	mongoAchRepo := repository.NewAchievementMongoRepository()
 
@@ -42,11 +66,9 @@ func main() {
 	studentService := service.NewStudentService(studentRepo, pgAchRepo, mongoAchRepo)
 	lecturerService := service.NewLecturerService(lecturerRepo)
 	achievementService := service.NewAchievementService(pgAchRepo, mongoAchRepo, studentRepo)
-
-	// === NEW: Report Service (pakai 3 repo achievement + student) ===
 	reportService := service.NewReportService(pgAchRepo, mongoAchRepo, studentRepo)
 
-	// 4. Setup routes (tambahkan reportService)
+	// === Setup routes ===
 	routes.SetupRoutes(
 		app,
 		authService,
@@ -54,7 +76,7 @@ func main() {
 		studentService,
 		lecturerService,
 		achievementService,
-		reportService, // ← baru ditambahkan
+		reportService,
 	)
 
 	// 5. Start server
